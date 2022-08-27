@@ -10,7 +10,10 @@ from openai.embeddings_utils import get_embedding, cosine_similarity
 from ratelimit import limits, RateLimitException
 import logging
 from backoff import on_exception, expo
-from rate_limits import OPENAI_RATE_LIMIT
+from params.rate_limits import OPENAI_RATE_LIMIT
+
+pd.options.mode.chained_assignment = None
+openai.api_key = "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"
 
 
 @limits(calls=OPENAI_RATE_LIMIT['calls'], period=OPENAI_RATE_LIMIT['period'])
@@ -60,25 +63,28 @@ def _attach_text_embeddings(
     for i in tqdm.tqdm(df[text_field].values):
         search_babbage.append(_get_embedding(i, model=embedding_model))
 
-    df[embedding_column_name] = search_babbage
+    df.loc[:, embedding_column_name] = search_babbage
     return df
 
 
 @on_exception(expo, RateLimitException, max_tries=8)
 @limits(calls=OPENAI_RATE_LIMIT['calls'], period=OPENAI_RATE_LIMIT['period'])
 def _search_text_from_embeddings(
-    df : pd.DataFrame,
-    search_query : str
+        df : pd.DataFrame,
+        search_query : str,
+        embedding_column_name : str = 'search_babbage',
+        sim_column_name : str = 'similarities',
+
 ) -> pd.DataFrame:
 
     embedding = _get_embedding(
         search_query,
         model="text-search-babbage-query-001")
 
-    if 'search_babbage' not in df.columns:
+    if embedding_column_name not in df.columns:
         raise Exception('No embeddings contained in dataframe - have these been generated?')
-    df["similarities"] = df.search_babbage.apply(lambda x: cosine_similarity(x, embedding))
-    return df.sort_values("similarities", ascending=False)
+    df.loc[:, sim_column_name] = df.search_babbage.apply(lambda x: cosine_similarity(x, embedding))
+    return df.sort_values(sim_column_name, ascending=False)
 
 
 def query_relevant_papers(

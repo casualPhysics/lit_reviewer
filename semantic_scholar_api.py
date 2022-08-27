@@ -4,8 +4,8 @@ from urllib.request import urlopen
 import pandas as pd
 from ratelimit import limits
 
-from consts import SEMANTIC_SCHOLAR_FIELDS
-from rate_limits import SEMANTIC_SCHOLAR_RATE_LIMIT
+from params.consts import SEMANTIC_SCHOLAR_FIELDS
+from params.rate_limits import SEMANTIC_SCHOLAR_RATE_LIMIT
 
 
 @limits(calls=SEMANTIC_SCHOLAR_RATE_LIMIT['calls'],
