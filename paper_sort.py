@@ -22,7 +22,7 @@ def _get_embedding(
     A function that calls an embedding model on some text.
     :param text: Text to embed.
     :param model: Choice of model
-    :return: vector
+    :return: Vector of similarites
     """
     text = text.replace("\n", " ")
     return openai.Embedding.create(input=[text], model=model)['data'][0]['embedding']
@@ -77,9 +77,7 @@ def _search_text_from_embeddings(
 
     if 'search_babbage' not in df.columns:
         raise Exception('No embeddings contained in dataframe - have these been generated?')
-
     df["similarities"] = df.search_babbage.apply(lambda x: cosine_similarity(x, embedding))
-
     return df.sort_values("similarities", ascending=False)
 
 

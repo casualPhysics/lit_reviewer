@@ -37,16 +37,16 @@ def construct_semantic_query(
     return f"http://api.semanticscholar.org/graph/v1/paper/search?query={query}&offset=10&limit={limit}&fields={fields_joined}"
 
 
-def call_semantic_scholar(
-        query: str,
-        limit: int,
-        fields: list,
-        remove_stop_words: bool = True
-):
-    return send_request(construct_semantic_query(query, limit, fields))
+def send_request(
+        query : str
+) -> pd.DataFrame:
+    """
+    Sends the request to the api then parses
+    results into a readable pandas dataframe.
 
-
-def send_request(query):
+    :param query: This is the semantic scholar api query string
+    :return:
+    """
     response = urlopen(query)
 
     if response.status != 200:
@@ -54,5 +54,14 @@ def send_request(query):
 
     elevations = response.read()
     data = json.loads(elevations)
-    df = pd.json_normalize(data['data'])
-    return df
+    results_dataframe = pd.json_normalize(data['data'])
+    return results_dataframe
+
+
+def call_semantic_scholar(
+        query: str,
+        limit: int,
+        fields: list,
+        remove_stop_words: bool = True
+) -> pd.DataFrame:
+    return send_request(construct_semantic_query(query, limit, fields))
