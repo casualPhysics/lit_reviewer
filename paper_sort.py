@@ -11,14 +11,18 @@ from ratelimit import limits, RateLimitException
 import logging
 from backoff import on_exception, expo
 from params.rate_limits import OPENAI_RATE_LIMIT
+import os
+from keys import OPENAI_KEY
 
 pd.options.mode.chained_assignment = None
-openai.api_key = "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"
+openai.api_key = OPENAI_KEY
 
 
+@on_exception(expo, RateLimitException, max_tries=8)
 @limits(calls=OPENAI_RATE_LIMIT['calls'], period=OPENAI_RATE_LIMIT['period'])
 def _get_embedding(
         text : str,
+        max_token_length : int = 1000,
         model="text-similarity-davinci-001"
 ):
     """
@@ -28,6 +32,10 @@ def _get_embedding(
     :return: Vector of similarites
     """
     text = text.replace("\n", " ")
+    print(len(text) / 4)
+    if len(text) / 4  > max_token_length:
+        text = text[:max_token_length * 4]
+        print('Shortening! ')
     return openai.Embedding.create(input=[text], model=model)['data'][0]['embedding']
 
 
@@ -37,7 +45,6 @@ def aggregate_columns(df, test_amount):
     return df
 
 
-@on_exception(expo, RateLimitException, max_tries=8)
 @limits(calls=OPENAI_RATE_LIMIT['calls'], period=OPENAI_RATE_LIMIT['period'])
 def _attach_text_embeddings(
         df: pd.DataFrame,
@@ -67,7 +74,6 @@ def _attach_text_embeddings(
     return df
 
 
-@on_exception(expo, RateLimitException, max_tries=8)
 @limits(calls=OPENAI_RATE_LIMIT['calls'], period=OPENAI_RATE_LIMIT['period'])
 def _search_text_from_embeddings(
         df : pd.DataFrame,

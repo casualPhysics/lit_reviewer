@@ -13,6 +13,10 @@ save_location = f'../loaded_csvs/{query.lower().replace(" ","_")}'
 
 if __name__ == "__main__":
 
+    """
+    Save some papers here. 
+    """
+
     logging.info(f'Saving query {paper_topic} with {limit} entries to {save_location}')
     texts = call_semantic_scholar(paper_topic, limit, fields)
     query_relevant_papers(texts, text_field, query).to_csv(save_location)

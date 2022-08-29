@@ -7,7 +7,7 @@ def shorten_long_strings(
 ) -> str:
     """
     Strings in tables can be too long
-    :param words_to_truncate: How many words we have to reduce this to. 
+    :param words_to_truncate: How many words we have to reduce this to.
     :return:
     """
     return ' '.join(text.split(' ')[:words_to_truncate]) + ' ...'
@@ -15,13 +15,14 @@ def shorten_long_strings(
 
 def truncate_columns(
     df : pd.DataFrame,
-    columns_to_truncate : list = ['abstract']
+    columns_to_truncate : tuple = ('abstract', )
 ) -> pd.DataFrame:
     """
     Truncate columns where the text is too much.
     :return: cleaned dataframe with shortened columns
     """
-    for col in columns_to_truncate:
+    df = df.copy()
+    for col in list(columns_to_truncate):
         if pd.api.types.is_string_dtype(df[col].dtype):
             df[col] = df[col].apply(shorten_long_strings)
         else:
